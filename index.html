@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mis Gastos Diarios 💰</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Google Fonts: Inter (moderna y legible) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome (iconos) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Manifest PWA -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Iconos -->
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="icon" href="assets/icon-192.png">
+
+<!-- Para que sea responsive y permita instalación -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Mis Gastos">
+<meta name="apple-mobile-web-app-title" content="Mis Gastos">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-wallet"></i> Mis Gastos</h1>
+      <p>Controla tus gastos diarios fácilmente</p>
+      <div class="theme-toggle">
+        <button id="theme-btn" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+      </div>
+
+      <!-- Ingreso mensual -->
+      <div class="income-section">
+        <h3>💰 Ingreso Mensual</h3>
+        <div class="form-group">
+          <input type="number" id="monthly-income" placeholder="Ej: 3000" />
+          <button id="save-income" class="btn btn-sm">Guardar Ingreso</button>
+        </div>
+        <p id="remaining-budget" style="margin-top: 0.5rem; font-size: 1.1rem;">
+          <strong>Disponible:</strong> 0.00€
+        </p>
+      </div>
+    </header>
+
+    <!-- Formulario para añadir gasto -->
+    <section class="card">
+      <h2>Añadir Gasto</h2>
+
+      <form id="expense-form">
+        <div class="form-group">
+          <label for="amount">Monto (€)</label>
+          <input type="number" id="amount" step="0.01" placeholder="Ej: 1500" required />
+        </div>
+        <div class="form-group">
+          <label for="category">Categoría</label>
+          <select id="category" required>
+            <option value="food">🍽️ Alimentación</option>
+            <option value="transport">🚌 Transporte</option>
+            <option value="entertainment">🎮 Entretenimiento</option>
+            <option value="health">💊 Salud</option>
+            <option value="housing">🏠 Vivienda</option>
+            <option value="mobile">📱 Móvil</option>
+            <option value="clothing">👕 Vestimenta</option>
+            <option value="other">📦 Otros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="description">Descripción</label>
+          <input type="text" id="description" placeholder="Ej: Almuerzo en el centro" />
+        </div>
+        <div class="form-group">
+          <label for="date">Fecha</label>
+          <input type="date" id="date" required />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Añadir Gasto
+        </button>
+      </form>
+    </section>
+
+    <!-- Resumen -->
+    <section class="card">
+      <h2><i class="fas fa-chart-pie"></i> Resumen Mensual</h2>
+
+      <!-- Total Gastado (destacado) -->
+      <div class="summary-total">
+        <strong>Total Gastado:</strong> 
+        <span id="total-expense" class="total-amount">0.00€</span>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="chart-container">
+        <canvas id="expense-chart"></canvas>
+      </div>
+
+      <!-- Botón PDF -->
+      <div class="export-section">
+        <button id="export-pdf" class="btn btn-pdf">
+          <i class="fas fa-file-pdf"></i> Exportar Informe a PDF
+        </button>
+      </div>
+
+      <!-- Presupuestos -->
+      <div class="budget-section">
+        <h3>🎯 Presupuestos por Categoría</h3>
+        <div class="budget-grid">
+          <div class="budget-item">
+            <label>Alimentación</label>
+            <input type="number" id="budget-food" placeholder="20000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-food" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-food">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Transporte</label>
+            <input type="number" id="budget-transport" placeholder="10000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-transport" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-transport">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Entretenimiento</label>
+            <input type="number" id="budget-entertainment" placeholder="5000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-entertainment" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-entertainment">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Salud</label>
+            <input type="number" id="budget-health" placeholder="8000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-health" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-health">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Vivienda</label>
+            <input type="number" id="budget-housing" placeholder="15000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-housing" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-housing">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Móvil</label>
+            <input type="number" id="budget-mobile" placeholder="10000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-mobile" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-mobile">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Vestimenta</label>
+            <input type="number" id="budget-clothing" placeholder="8000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-clothing" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-clothing">0%</small>
+            </div>
+          </div>
+          <div class="budget-item">
+            <label>Otros</label>
+            <input type="number" id="budget-other" placeholder="5000€" />
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div id="progress-other" class="progress-fill"></div>
+              </div>
+              <small id="progress-text-other">0%</small>
+            </div>
+          </div>
+        </div>
+        <button id="save-budgets" class="btn btn-primary btn-sm">Guardar Presupuestos</button>
+      </div>
+    </section>
+
+    <!-- Lista de gastos -->
+    <section class="card">
+      <h2>Historial de Gastos</h2>
+      <div class="filter-container">
+        <div class="form-group">
+          <label for="filter-date">Filtrar por fecha</label>
+          <input type="date" id="filter-date" />
+        </div>
+        <div class="form-group">
+          <label for="filter-month">Filtrar por mes</label>
+          <input type="month" id="filter-month" />
+        </div>
+        <div class="form-group">
+          <label for="filter-category">Filtrar por categoría</label>
+          <select id="filter-category">
+            <option value="">Todas</option>
+            <option value="food">Alimentación</option>
+            <option value="transport">Transporte</option>
+            <option value="entertainment">Entretenimiento</option>
+            <option value="health">Salud</option>
+            <option value="housing">Vivienda</option>
+            <option value="mobile">Móvil</option>
+            <option value="clothing">Vestimenta</option>
+            <option value="other">Otros</option>
+          </select>
+        </div>
+      </div>
+      <button id="clear-filters" class="btn btn-sm">Limpiar</button>
+      <ul id="expense-list" class="expense-list">
+        <!-- Aquí se cargarán los gastos -->
+      </ul>
+    </section>
+  </div>
+
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Registro del Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registrado:', reg))
+        .catch(err => console.log('Error al registrar SW:', err));
+    });
+  }
+</script>
+</body>
+</html>
+
